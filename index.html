@@ -514,6 +514,23 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .app-screen {
+                padding: 12px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .auth-screen {
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -561,7 +578,7 @@
 
         <!-- App Screen -->
         <div class="app-screen" id="appScreen">
-            <button class="btn-logout" id="logoutBtn">Sign Out</button>
+            <!-- <button class="btn-logout" id="logoutBtn">Sign Out</button> -->
             <div class="app-header">
                 <div>
                     <h1>Board Game Collection</h1>
