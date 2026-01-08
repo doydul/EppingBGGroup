@@ -977,12 +977,14 @@
         });
 
         // Sign Out
-        logoutBtn.addEventListener('click', async () => {
-            currentUser = null;
-            clearSession();
-            authScreen.classList.remove('hidden');
-            appScreen.classList.remove('active');
-        });
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                currentUser = null;
+                clearSession();
+                authScreen.classList.remove('hidden');
+                appScreen.classList.remove('active');
+            });
+        }
 
         // Bulk entry toggle
         const bulkEntryToggle = document.getElementById('bulkEntryToggle');
