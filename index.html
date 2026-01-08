@@ -1295,6 +1295,36 @@
             });
         }
 
+        function mergeGamesByTitle(games) {
+            const mergedMap = {};
+            
+            games.forEach((game) => {
+                const titleKey = game.name.toLowerCase();
+                
+                if (!mergedMap[titleKey]) {
+                    mergedMap[titleKey] = {
+                        id: game.id,
+                        name: game.name,
+                        players: game.players,
+                        playTime: game.playTime,
+                        description: game.description,
+                        owners: [{ userId: game.userId, username: game.username }],
+                        gameIds: [game.id]
+                    };
+                } else {
+                    const owner = { userId: game.userId, username: game.username };
+                    if (!mergedMap[titleKey].owners.some(o => o.userId === game.userId)) {
+                        mergedMap[titleKey].owners.push(owner);
+                    }
+                    if (!mergedMap[titleKey].gameIds.includes(game.id)) {
+                        mergedMap[titleKey].gameIds.push(game.id);
+                    }
+                }
+            });
+            
+            return Object.values(mergedMap);
+        }
+
         function displayAllGames(games) {
             if (games.length === 0) {
                 allGamesContainer.innerHTML = `
@@ -1309,8 +1339,10 @@
 
             allGamesContainer.innerHTML = '<div class="games-list"></div>';
             const gamesList = allGamesContainer.querySelector('.games-list');
+            
+            const mergedGames = mergeGamesByTitle(games);
 
-            games.forEach((game) => {
+            mergedGames.forEach((game) => {
                 const gameItem = document.createElement('div');
                 gameItem.className = 'game-item';
                 const gameMetadata = [];
@@ -1319,13 +1351,14 @@
                 const metadataHtml = gameMetadata.length > 0 ? `<div class="game-metadata">${gameMetadata.join(' • ')}</div>` : '';
                 const descriptionHtml = game.description ? `<div class="game-description">${escapeHtml(game.description)}</div>` : '';
                 
-                const isOwnedByCurrentUser = game.userId === currentUser.id;
+                const ownerNames = game.owners.map(o => escapeHtml(o.username)).join(', ');
+                const isOwnedByCurrentUser = game.owners.some(o => o.userId === currentUser.id);
                 const knowHowToPlayButtonHtml = !isOwnedByCurrentUser ? `<button class="btn-primary btn-small know-how-to-play-btn" data-id="${game.id}">Know How to Play</button>` : '';
                 
                 gameItem.innerHTML = `
                     <div class="game-info">
                         <div class="game-name">${escapeHtml(game.name)}</div>
-                        <div class="game-owner">owned by ${escapeHtml(game.username)}</div>
+                        <div class="game-owner">owned by ${ownerNames}</div>
                         ${metadataHtml}
                         ${descriptionHtml}
                         <div id="wtp-list-all-${game.id}" class="want-to-play-list"></div>
@@ -1357,8 +1390,10 @@
 
                 gamesList.appendChild(gameItem);
                 loadUserWantToPlayPreference(game.id, 'all');
-                loadWantToPlayUsers(game.id, 'all');
-                loadKnowHowToPlayUsers(game.id, 'all');
+                
+                // Load merged want to play and know how to play users from all game IDs
+                loadMergedWantToPlayUsers(game.gameIds, 'all');
+                loadMergedKnowHowToPlayUsers(game.gameIds, 'all');
             });
         }
 
@@ -1564,6 +1599,39 @@
             }
         }
 
+        async function loadMergedWantToPlayUsers(gameIds, tab = 'all') {
+            try {
+                const userMap = {};
+                
+                for (const gameId of gameIds) {
+                    const wtpQuery = query(
+                        collection(db, 'wantToPlay'),
+                        where('gameId', '==', gameId)
+                    );
+                    
+                    const snapshot = await getDocs(wtpQuery);
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if ((data.preferenceValue || 0) >= 3) {
+                            const username = data.username;
+                            if (!userMap[username]) {
+                                userMap[username] = data.preferenceValue || 0;
+                            }
+                        }
+                    });
+                }
+                
+                const users = Object.entries(userMap).map(([username, preferenceValue]) => ({
+                    username,
+                    preferenceValue
+                }));
+                
+                displayWantToPlayUsers(gameIds[0], users, tab);
+            } catch (error) {
+                console.error(`Error loading merged want to play users:`, error);
+            }
+        }
+
         function displayWantToPlayUsers(gameId, users, tab = 'my') {
             const container = document.getElementById(`wtp-list-${tab}-${gameId}`);
             if (!container) {
@@ -1607,6 +1675,29 @@
                 displayKnowHowToPlayUsers(gameId, users, tab);
             } catch (error) {
                 console.error(`Error loading know how to play users for game ${gameId}:`, error);
+            }
+        }
+
+        async function loadMergedKnowHowToPlayUsers(gameIds, tab = 'all') {
+            try {
+                const userSet = new Set();
+                
+                for (const gameId of gameIds) {
+                    const khttpQuery = query(
+                        collection(db, 'knowHowToPlay'),
+                        where('gameId', '==', gameId)
+                    );
+                    
+                    const snapshot = await getDocs(khttpQuery);
+                    snapshot.forEach((doc) => {
+                        userSet.add(doc.data().username);
+                    });
+                }
+                
+                const users = Array.from(userSet);
+                displayKnowHowToPlayUsers(gameIds[0], users, tab);
+            } catch (error) {
+                console.error(`Error loading merged know how to play users:`, error);
             }
         }
 
