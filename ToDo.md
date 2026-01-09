@@ -1,0 +1,2 @@
+- allow pasting of tab seperated list of games
+- 

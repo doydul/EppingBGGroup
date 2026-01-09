@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Game Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 60em;
+        }
+
+        .auth-screen {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        .app-screen {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            display: none;
+        }
+
+        .app-screen.active {
+            display: block;
+        }
+
+        .auth-screen.hidden {
+            display: none;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ee5a52;
+        }
+
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #40c057;
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .toggle-auth button {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+            font-weight: 600;
+        }
+
+        .toggle-auth button:hover {
+            color: #764ba2;
+        }
+
+        .error {
+            background: #ffe0e0;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .btn-logout {
+            position: fixed;
+            width: 15em;
+            top: 50px;
+            right: 50px;
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .btn-logout:hover {
+            background: #ee5a52;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .app-header h1 {
+            margin: 0;
+        }
+
+        .user-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            color: #333;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .add-game-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .add-game-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .game-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .game-input-group input {
+            flex: 1;
+        }
+
+        .game-input-group button {
+            flex: 0 0 auto;
+            width: auto;
+            padding: 12px 24px;
+        }
+
+        .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .sort-controls label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .sort-controls select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .sort-controls select:hover {
+            border-color: #667eea;
+        }
+
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .game-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: all 0.3s;
+            gap: 16px;
+        }
+
+        .game-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .game-item.editing {
+            background: #f9f9f9;
+        }
+
+        .game-info {
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-name {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .game-owner {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .game-metadata {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .game-description {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .want-to-play-list {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .want-to-play-list-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .want-to-play-users {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .know-how-to-play-list {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .know-how-to-play-list-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .know-how-to-play-users {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .user-badge {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #333;
+        }
+
+        .user-badge-yellow {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .user-badge-orange {
+            background: #ffa500;
+            color: white;
+        }
+
+        .user-badge-red {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .user-badge-green {
+            background: #51cf66;
+            color: white;
+        }
+
+        .game-name-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .game-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .want-to-play-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .want-to-play-select:hover {
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 14px;
+            color: #bbb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .app-screen {
+                padding: 12px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .auth-screen {
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Auth Screen -->
+        <div class="auth-screen" id="authScreen">
+            <h1>Board Game Collection</h1>
+            <p class="subtitle">Manage your board game library</p>
+
+            <div class="error" id="authError"></div>
+            <div class="success" id="authSuccess"></div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="btn-primary" id="loginBtn">Sign In</button>
+                <div class="toggle-auth">
+                    Don't have an account? <button id="toggleToSignup">Sign up</button>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password">
+                </div>
+                <button class="btn-primary" id="signupBtn">Create Account</button>
+                <div class="toggle-auth">
+                    Already have an account? <button id="toggleToLogin">Sign in</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Screen -->
+        <div class="app-screen" id="appScreen">
+            <!-- <button class="btn-logout" id="logoutBtn">Sign Out</button> -->
+            <div class="app-header">
+                <div>
+                    <h1>Board Game Collection</h1>
+                    <p class="user-info" id="userEmail"></p>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" id="myGamesTab">My Games</button>
+                <button class="tab-button" id="allGamesTab">All Games</button>
+            </div>
+
+            <!-- My Games Tab -->
+            <div class="tab-content active" id="myGamesContent">
+                <div class="add-game-section">
+                    <h3>Add a New Game</h3>
+                    <div id="singleGameForm">
+                        <div class="game-input-group">
+                            <input type="text" id="gameNameInput" placeholder="Enter board game name...">
+                            <button class="btn-primary btn-small" id="addGameBtn">Add</button>
+                        </div>
+                        <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Number of Players</label>
+                                <input type="text" id="gamePlayersInput" placeholder="e.g., 2-4 or 1-6">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Play Time</label>
+                                <input type="text" id="gamePlayTimeInput" placeholder="e.g., 30-60 mins">
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Description</label>
+                            <textarea id="gameDescriptionInput" placeholder="Brief description of the game..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-height: 80px; resize: vertical;"></textarea>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button class="btn-primary btn-small" id="bulkEntryToggle" style="width: 100%;">Paste Multiple Games</button>
+                        </div>
+                    </div>
+                    <div id="bulkEntryForm" style="display: none;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Format: Title, Owner, Players, Play Time, Description</label>
+                        <label style="display: block; margin-bottom: 12px; font-size: 12px; color: #666;">One game per line. Owner field is ignored. Other fields are optional.</label>
+                        <textarea id="bulkGamesInput" placeholder="Catan, John, 2-4, 60 mins, A strategy game about building settlements&#10;Ticket to Ride, Jane, 2-5, 45-90 mins, Railway adventure game" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: monospace; min-height: 120px; resize: vertical;"></textarea>
+                        <div style="margin-top: 12px; margin-bottom: 12px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Field Separator:</label>
+                            <div style="display: flex; gap: 16px;">
+                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                                    <input type="radio" name="bulkFieldSeparator" value="comma" style="width: auto; cursor: pointer;">
+                                    Comma-separated
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                                    <input type="radio" name="bulkFieldSeparator" value="tab" checked style="width: auto; cursor: pointer;">
+                                    Tab-separated
+                                </label>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-primary btn-small" id="addBulkGamesBtn" style="flex: 1;">Add Games</button>
+                            <button class="btn-primary btn-small" id="cancelBulkBtn" style="flex: 1;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sort-controls">
+                    <label for="myGamesSortSelect">Sort by:</label>
+                    <select id="myGamesSortSelect">
+                        <option value="alphabetical">Alphabetical</option>
+                        <option value="wantToPlay">Desire to play</option>
+                    </select>
+                </div>
+
+                <div id="myGamesContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎲</div>
+                        <p>No games yet</p>
+                        <p class="empty-state-hint">Add your first board game to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Games Tab -->
+            <div class="tab-content" id="allGamesContent">
+                <div class="sort-controls">
+                    <label for="allGamesSortSelect">Sort by:</label>
+                    <select id="allGamesSortSelect">
+                        <option value="alphabetical">Alphabetical</option>
+                        <option value="wantToPlay">Desire to play</option>
+                    </select>
+                </div>
+
+                <div id="allGamesContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎲</div>
+                        <p>No games yet</p>
+                        <p class="empty-state-hint">Be the first to add a board game!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // Firebase Configuration
+        // IMPORTANT: Replace these with your Firebase project credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLzB5nnkUH0qZYEAZHg9nfqtduM2Ec0rE",
+            authDomain: "bggroup-7d4d9.firebaseapp.com",
+            projectId: "bggroup-7d4d9",
+            storageBucket: "bggroup-7d4d9.firebasestorage.app",
+            messagingSenderId: "222041321602",
+            appId: "1:222041321602:web:83cb5b8ed3f73ea9bdc49b"
+
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const authScreen = document.getElementById('authScreen');
+        const appScreen = document.getElementById('appScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const authError = document.getElementById('authError');
+        const authSuccess = document.getElementById('authSuccess');
+        const userEmail = document.getElementById('userEmail');
+        const myGamesContainer = document.getElementById('myGamesContainer');
+        const allGamesContainer = document.getElementById('allGamesContainer');
+
+        // Tab Elements
+        const myGamesTab = document.getElementById('myGamesTab');
+        const allGamesTab = document.getElementById('allGamesTab');
+        const myGamesContent = document.getElementById('myGamesContent');
+        const allGamesContent = document.getElementById('allGamesContent');
+
+        // Auth Buttons
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const toggleToSignup = document.getElementById('toggleToSignup');
+        const toggleToLogin = document.getElementById('toggleToLogin');
+
+        // Game Buttons
+        const addGameBtn = document.getElementById('addGameBtn');
+        const gameNameInput = document.getElementById('gameNameInput');
+
+        // Sort Controls
+        const myGamesSortSelect = document.getElementById('myGamesSortSelect');
+        const allGamesSortSelect = document.getElementById('allGamesSortSelect');
+
+        // Input Fields
+        const loginUsername = document.getElementById('loginUsername');
+        const loginPassword = document.getElementById('loginPassword');
+        const signupUsername = document.getElementById('signupUsername');
+        const signupPassword = document.getElementById('signupPassword');
+
+        let currentUser = null;
+        let myGamesData = [];
+        let allGamesData = [];
+        let currentSortType = localStorage.getItem('bggroup_sort') || 'alphabetical';
+
+        // Show/Hide Error Messages
+        function showError(message) {
+            authError.textContent = message;
+            authError.classList.add('show');
+            setTimeout(() => authError.classList.remove('show'), 5000);
+        }
+
+        function showSuccess(message) {
+            authSuccess.textContent = message;
+            authSuccess.classList.add('show');
+            setTimeout(() => authSuccess.classList.remove('show'), 5000);
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            if (tab === 'my') {
+                myGamesTab.classList.add('active');
+                allGamesTab.classList.remove('active');
+                myGamesContent.classList.add('active');
+                allGamesContent.classList.remove('active');
+            } else {
+                myGamesTab.classList.remove('active');
+                allGamesTab.classList.add('active');
+                myGamesContent.classList.remove('active');
+                allGamesContent.classList.add('active');
+            }
+        }
+
+        myGamesTab.addEventListener('click', () => switchTab('my'));
+        allGamesTab.addEventListener('click', () => switchTab('all'));
+
+        // Sort Controls Event Listeners
+        myGamesSortSelect.addEventListener('change', async (e) => {
+            const sortType = e.target.value;
+            currentSortType = sortType;
+            localStorage.setItem('bggroup_sort', sortType);
+            allGamesSortSelect.value = sortType;
+            const sortedGames = await getSortedGames(myGamesData, sortType);
+            displayMyGames(sortedGames);
+        });
+
+        allGamesSortSelect.addEventListener('change', async (e) => {
+            const sortType = e.target.value;
+            currentSortType = sortType;
+            localStorage.setItem('bggroup_sort', sortType);
+            myGamesSortSelect.value = sortType;
+            const sortedGames = await getSortedGames(allGamesData, sortType);
+            displayAllGames(sortedGames);
+        });
+
+        // Sorting Functions
+        async function getSortedGames(games, sortType) {
+            if (sortType === 'alphabetical') {
+                return games.slice().sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortType === 'wantToPlay') {
+                // Fetch total preference values for all games
+                const gamesWithTotals = await Promise.all(
+                    games.map(async (game) => {
+                        const wtpQuery = query(
+                            collection(db, 'wantToPlay'),
+                            where('gameId', '==', game.id)
+                        );
+                        const snapshot = await getDocs(wtpQuery);
+                        let totalPreferenceValue = 0;
+                        snapshot.forEach((doc) => {
+                            totalPreferenceValue += (doc.data().preferenceValue || 0);
+                        });
+                        return {
+                            ...game,
+                            totalPreferenceValue: totalPreferenceValue
+                        };
+                    })
+                );
+                // Sort by total preference value (descending)
+                return gamesWithTotals.sort((a, b) => b.totalPreferenceValue - a.totalPreferenceValue);
+            }
+            return games;
+        }
+
+        // Toggle Auth Forms
+        toggleToSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            authError.classList.remove('show');
+            authSuccess.classList.remove('show');
+        });
+
+        toggleToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            authError.classList.remove('show');
+            authSuccess.classList.remove('show');
+        });
+
+        // Sign Up
+        signupBtn.addEventListener('click', async () => {
+            const username = signupUsername.value.trim().toLowerCase();
+            const password = signupPassword.value.trim();
+
+            if (!username || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                signupBtn.disabled = true;
+                signupBtn.textContent = 'Creating account...';
+
+                // Check if username already exists
+                const usersQuery = query(collection(db, 'users'), where('username', '==', username));
+                const existingUsers = await getDocs(usersQuery);
+
+                if (!existingUsers.empty) {
+                    throw new Error('Username already taken');
+                }
+
+                // Create a simple ID for the user
+                const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                // Store user in Firestore
+                await addDoc(collection(db, 'users'), {
+                    userId: userId,
+                    username: username,
+                    password: password,
+                    createdAt: new Date()
+                });
+
+                showSuccess('Account created! Signing you in...');
+                signupUsername.value = '';  
+                signupPassword.value = '';
+
+                // Auto-login after signup
+                setTimeout(() => {
+                    loginUsername.value = username;
+                    loginPassword.value = password;
+                    loginBtn.click();
+                    signupBtn.disabled = false;
+                    signupBtn.textContent = 'Create Account';
+                }, 500);
+            } catch (error) {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+                showError(error.message);
+            }
+        });
+
+        // Save user session to localStorage
+        function saveSession(user) {
+            localStorage.setItem('bggroup_user', JSON.stringify(user));
+        }
+
+        // Load user session from localStorage
+        function loadSession() {
+            const saved = localStorage.getItem('bggroup_user');
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        // Clear user session from localStorage
+        function clearSession() {
+            localStorage.removeItem('bggroup_user');
+        }
+
+        // Sign In
+        loginBtn.addEventListener('click', async () => {
+            const username = loginUsername.value.trim().toLowerCase();
+            const password = loginPassword.value.trim();
+
+            if (!username || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Signing in...';
+
+                // Find user by username and password
+                const usersQuery = query(collection(db, 'users'), where('username', '==', username));
+                const userDocs = await getDocs(usersQuery);
+
+                if (userDocs.empty) {
+                    throw new Error('Username or password incorrect');
+                }
+
+                const userDoc = userDocs.docs[0];
+                const userData = userDoc.data();
+
+                if (userData.password !== password) {
+                    throw new Error('Username or password incorrect');
+                }
+
+                // Set current user
+                currentUser = {
+                    id: userData.userId,
+                    username: userData.username,
+                    docId: userDoc.id
+                };
+
+                // Save session to localStorage
+                saveSession(currentUser);
+
+                loginUsername.value = '';
+                loginPassword.value = '';
+
+                // Update UI
+                authScreen.classList.add('hidden');
+                appScreen.classList.add('active');
+                userEmail.textContent = userData.username;
+                loadMyGames(currentUser.id);
+                loadAllGames();
+
+                setTimeout(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                }, 500);
+            } catch (error) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+                showError(error.message);
+            }
+        });
+
+        // Sign Out
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                currentUser = null;
+                clearSession();
+                authScreen.classList.remove('hidden');
+                appScreen.classList.remove('active');
+            });
+        }
+
+        // Bulk entry toggle
+        const bulkEntryToggle = document.getElementById('bulkEntryToggle');
+        const singleGameForm = document.getElementById('singleGameForm');
+        const bulkEntryForm = document.getElementById('bulkEntryForm');
+        const bulkGamesInput = document.getElementById('bulkGamesInput');
+        const addBulkGamesBtn = document.getElementById('addBulkGamesBtn');
+        const cancelBulkBtn = document.getElementById('cancelBulkBtn');
+
+        bulkEntryToggle.addEventListener('click', () => {
+            singleGameForm.style.display = 'none';
+            bulkEntryForm.style.display = 'block';
+        });
+
+        cancelBulkBtn.addEventListener('click', () => {
+            singleGameForm.style.display = 'block';
+            bulkEntryForm.style.display = 'none';
+            bulkGamesInput.value = '';
+        });
+
+        // Add Game
+        addGameBtn.addEventListener('click', async () => {
+            const gameName = gameNameInput.value.trim();
+            const gamePlayersInput = document.getElementById('gamePlayersInput');
+            const gamePlayTimeInput = document.getElementById('gamePlayTimeInput');
+            const gameDescriptionInput = document.getElementById('gameDescriptionInput');
+
+            if (!gameName) {
+                showError('Please enter a game name');
+                return;
+            }
+
+            if (!currentUser) {
+                showError('You must be signed in to add games');
+                return;
+            }
+
+            try {
+                addGameBtn.disabled = true;
+                addGameBtn.textContent = 'Adding...';
+
+                await addDoc(collection(db, 'games'), {
+                    userId: currentUser.id,
+                    name: gameName,
+                    players: gamePlayersInput.value.trim(),
+                    playTime: gamePlayTimeInput.value.trim(),
+                    description: gameDescriptionInput.value.trim(),
+                    createdAt: new Date()
+                });
+
+                gameNameInput.value = '';
+                gamePlayersInput.value = '';
+                gamePlayTimeInput.value = '';
+                gameDescriptionInput.value = '';
+                addGameBtn.disabled = false;
+                addGameBtn.textContent = 'Add';
+
+                // Reload games lists
+                await loadMyGames(currentUser.id);
+                await loadAllGames();
+            } catch (error) {
+                addGameBtn.disabled = false;
+                addGameBtn.textContent = 'Add';
+                showError(error.message);
+            }
+        });
+
+        // Add Bulk Games
+        addBulkGamesBtn.addEventListener('click', async () => {
+            const gamesText = bulkGamesInput.value.trim();
+
+            if (!gamesText) {
+                showError('Please paste at least one game');
+                return;
+            }
+
+            if (!currentUser) {
+                showError('You must be signed in to add games');
+                return;
+            }
+
+            try {
+                addBulkGamesBtn.disabled = true;
+                addBulkGamesBtn.textContent = 'Adding...';
+
+                // Parse games - format: Title, Owner, Players, Play Time, Description
+                const games = [];
+                const lines = gamesText.split('\n').filter(line => line.trim().length > 0);
+                const fieldSeparator = document.querySelector('input[name="bulkFieldSeparator"]:checked').value;
+                const separator = fieldSeparator === 'tab' ? '\t' : ',';
+
+                for (const line of lines) {
+                    const fields = line.split(separator).map(field => field.trim());
+                    
+                    if (fields.length === 0 || !fields[0]) {
+                        continue;
+                    }
+
+                    const title = fields[0];
+                    // fields[1] is owner - ignored
+                    const players = fields.length > 2 ? fields[2] : '';
+                    const playTime = fields.length > 3 ? fields[3] : '';
+                    const description = fields.length > 4 ? fields[4] : '';
+
+                    games.push({
+                        name: title,
+                        players: players,
+                        playTime: playTime,
+                        description: description
+                    });
+                }
+
+                if (games.length === 0) {
+                    showError('No valid games found');
+                    addBulkGamesBtn.disabled = false;
+                    addBulkGamesBtn.textContent = 'Add Games';
+                    return;
+                }
+
+                // Add all games
+                for (const game of games) {
+                    await addDoc(collection(db, 'games'), {
+                        userId: currentUser.id,
+                        name: game.name,
+                        players: game.players,
+                        playTime: game.playTime,
+                        description: game.description,
+                        createdAt: new Date()
+                    });
+                }
+
+                bulkGamesInput.value = '';
+                singleGameForm.style.display = 'block';
+                bulkEntryForm.style.display = 'none';
+                addBulkGamesBtn.disabled = false;
+                addBulkGamesBtn.textContent = 'Add Games';
+
+                showSuccess(`Added ${games.length} game(s)`);
+
+                // Reload games lists
+                await loadMyGames(currentUser.id);
+                await loadAllGames();
+            } catch (error) {
+                addBulkGamesBtn.disabled = false;
+                addBulkGamesBtn.textContent = 'Add Games';
+                showError(error.message);
+            }
+        });
+
+        // Allow Enter key to submit login
+        loginUsername.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        loginPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        // Allow Enter key to submit signup
+        signupUsername.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                signupBtn.click();
+            }
+        });
+
+        signupPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                signupBtn.click();
+            }
+        });
+
+        // Allow Enter key to add game
+        gameNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addGameBtn.click();
+            }
+        });
+
+        // Load and Display My Games
+        async function loadMyGames(userId) {
+            try {
+                const gamesQuery = query(collection(db, 'games'), where('userId', '==', userId));
+                const snapshot = await getDocs(gamesQuery);
+                
+                const games = [];
+                snapshot.forEach((doc) => {
+                    games.push({ id: doc.id, ...doc.data() });
+                });
+
+                myGamesData = games;
+                myGamesSortSelect.value = currentSortType;
+                const sortedGames = await getSortedGames(games, currentSortType);
+                displayMyGames(sortedGames);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Load and Display All Games
+        async function loadAllGames() {
+            try {
+                const gamesQuery = query(collection(db, 'games'));
+                const snapshot = await getDocs(gamesQuery);
+                
+                const games = [];
+                const userCache = {};
+
+                for (const doc of snapshot.docs) {
+                    const gameData = doc.data();
+                    let username = userCache[gameData.userId];
+
+                    if (!username) {
+                        const userQuery = query(collection(db, 'users'), where('userId', '==', gameData.userId));
+                        const userDocs = await getDocs(userQuery);
+                        if (!userDocs.empty) {
+                            username = userDocs.docs[0].data().username;
+                            userCache[gameData.userId] = username;
+                        } else {
+                            username = 'Unknown User';
+                        }
+                    }
+
+                    games.push({ 
+                        id: doc.id, 
+                        ...gameData,
+                        username: username
+                    });
+                }
+
+                allGamesData = games;
+                allGamesSortSelect.value = currentSortType;
+                const sortedGames = await getSortedGames(games, currentSortType);
+                displayAllGames(sortedGames);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function displayMyGames(games) {
+            if (games.length === 0) {
+                myGamesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎲</div>
+                        <p>No games yet</p>
+                        <p class="empty-state-hint">Add your first board game to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            myGamesContainer.innerHTML = '<div class="games-list"></div>';
+            const gamesList = myGamesContainer.querySelector('.games-list');
+
+            games.forEach((game) => {
+                const gameItem = document.createElement('div');
+                gameItem.className = 'game-item';
+                const gameMetadata = [];
+                if (game.players) gameMetadata.push(`👥 ${escapeHtml(game.players)}`);
+                if (game.playTime) gameMetadata.push(`⏱️ ${escapeHtml(game.playTime)}`);
+                const metadataHtml = gameMetadata.length > 0 ? `<div class="game-metadata">${gameMetadata.join(' • ')}</div>` : '';
+                const descriptionHtml = game.description ? `<div class="game-description">${escapeHtml(game.description)}</div>` : '';
+                
+                gameItem.innerHTML = `
+                    <div class="game-info">
+                        <div class="game-name">${escapeHtml(game.name)}</div>
+                        ${metadataHtml}
+                        ${descriptionHtml}
+                        <div id="wtp-list-my-${game.id}" class="want-to-play-list"></div>
+                        <div id="khtp-list-my-${game.id}" class="know-how-to-play-list"></div>
+                    </div>
+                    <div class="game-actions">
+                        <select class="want-to-play-select" data-id="${game.id}">
+                            <option value="0">Not bothered</option>
+                            <option value="3">I'd quite like to play</option>
+                            <option value="4">I'd really like to play</option>
+                            <option value="5">I'm desperate to play</option>
+                        </select>
+                        <button class="btn-danger btn-small delete-btn" data-id="${game.id}">Delete</button>
+                    </div>
+                `;
+
+                const wantToPlaySelect = gameItem.querySelector('.want-to-play-select');
+                const deleteBtn = gameItem.querySelector('.delete-btn');
+
+                wantToPlaySelect.addEventListener('change', (e) => {
+                    setWantToPlayPreference(game.id, parseInt(e.target.value));
+                });
+
+                deleteBtn.addEventListener('click', async () => {
+                    try {
+                        await deleteDoc(doc(db, 'games', game.id));
+                        // Reload games lists
+                        await loadMyGames(currentUser.id);
+                        await loadAllGames();
+                    } catch (error) {
+                        showError(error.message);
+                    }
+                });
+
+                gamesList.appendChild(gameItem);
+                loadUserWantToPlayPreference(game.id, 'my');
+                loadWantToPlayUsers(game.id, 'my');
+                loadKnowHowToPlayUsers(game.id, 'my');
+            });
+        }
+
+        function mergeGamesByTitle(games) {
+            const mergedMap = {};
+            
+            games.forEach((game) => {
+                const titleKey = game.name.toLowerCase();
+                
+                if (!mergedMap[titleKey]) {
+                    mergedMap[titleKey] = {
+                        id: game.id,
+                        name: game.name,
+                        players: game.players,
+                        playTime: game.playTime,
+                        description: game.description,
+                        owners: [{ userId: game.userId, username: game.username }],
+                        gameIds: [game.id]
+                    };
+                } else {
+                    const owner = { userId: game.userId, username: game.username };
+                    if (!mergedMap[titleKey].owners.some(o => o.userId === game.userId)) {
+                        mergedMap[titleKey].owners.push(owner);
+                    }
+                    if (!mergedMap[titleKey].gameIds.includes(game.id)) {
+                        mergedMap[titleKey].gameIds.push(game.id);
+                    }
+                }
+            });
+            
+            return Object.values(mergedMap);
+        }
+
+        function displayAllGames(games) {
+            if (games.length === 0) {
+                allGamesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎲</div>
+                        <p>No games yet</p>
+                        <p class="empty-state-hint">Be the first to add a board game!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            allGamesContainer.innerHTML = '<div class="games-list"></div>';
+            const gamesList = allGamesContainer.querySelector('.games-list');
+            
+            const mergedGames = mergeGamesByTitle(games);
+
+            mergedGames.forEach((game) => {
+                const gameItem = document.createElement('div');
+                gameItem.className = 'game-item';
+                const gameMetadata = [];
+                if (game.players) gameMetadata.push(`👥 ${escapeHtml(game.players)}`);
+                if (game.playTime) gameMetadata.push(`⏱️ ${escapeHtml(game.playTime)}`);
+                const metadataHtml = gameMetadata.length > 0 ? `<div class="game-metadata">${gameMetadata.join(' • ')}</div>` : '';
+                const descriptionHtml = game.description ? `<div class="game-description">${escapeHtml(game.description)}</div>` : '';
+                
+                const ownerNames = game.owners.map(o => escapeHtml(o.username)).join(', ');
+                const isOwnedByCurrentUser = game.owners.some(o => o.userId === currentUser.id);
+                const knowHowToPlayButtonHtml = !isOwnedByCurrentUser ? `<button class="btn-primary btn-small know-how-to-play-btn" data-id="${game.id}">Know How to Play</button>` : '';
+                
+                gameItem.innerHTML = `
+                    <div class="game-info">
+                        <div class="game-name">${escapeHtml(game.name)}</div>
+                        <div class="game-owner">owned by ${ownerNames}</div>
+                        ${metadataHtml}
+                        ${descriptionHtml}
+                        <div id="wtp-list-all-${game.id}" class="want-to-play-list"></div>
+                        <div id="khtp-list-all-${game.id}" class="know-how-to-play-list"></div>
+                    </div>
+                    <div class="game-actions">
+                        <select class="want-to-play-select" data-id="${game.id}">
+                            <option value="0">Not bothered</option>
+                            <option value="3">I'd quite like to play</option>
+                            <option value="4">I'd really like to play</option>
+                            <option value="5">I'm desperate to play</option>
+                        </select>
+                        ${knowHowToPlayButtonHtml}
+                    </div>
+                `;
+
+                const wantToPlaySelect = gameItem.querySelector('.want-to-play-select');
+                const knowHowToPlayBtn = gameItem.querySelector('.know-how-to-play-btn');
+                wantToPlaySelect.addEventListener('change', (e) => {
+                    setWantToPlayPreference(game.id, parseInt(e.target.value));
+                });
+
+                if (knowHowToPlayBtn) {
+                    knowHowToPlayBtn.addEventListener('click', () => {
+                        console.log('Know how to play button clicked for game:', game.id);
+                        toggleKnowHowToPlay(game.id);
+                    });
+                }
+
+                gamesList.appendChild(gameItem);
+                loadUserWantToPlayPreference(game.id, 'all');
+                
+                // Load merged want to play and know how to play users from all game IDs
+                loadMergedWantToPlayUsers(game.gameIds, 'all');
+                loadMergedKnowHowToPlayUsers(game.gameIds, 'all');
+            });
+        }
+
+        function startEditingGame(gameItem, game) {
+            gameItem.classList.add('editing');
+            const gameName = gameItem.querySelector('.game-name');
+            const gameActions = gameItem.querySelector('.game-actions');
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'game-name-input';
+            input.value = game.name;
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn-success btn-small';
+            saveBtn.textContent = 'Save';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn-secondary btn-small';
+            cancelBtn.textContent = 'Cancel';
+
+            gameName.replaceWith(input);
+            gameActions.innerHTML = '';
+            gameActions.appendChild(saveBtn);
+            gameActions.appendChild(cancelBtn);
+
+            input.focus();
+            input.select();
+
+            const finishEditing = async (save) => {
+                if (save && input.value.trim()) {
+                    try {
+                        await updateDoc(doc(db, 'games', game.id), {
+                            name: input.value.trim()
+                        });
+                    } catch (error) {
+                        showError(error.message);
+                    }
+                }
+                gameItem.classList.remove('editing');
+            };
+
+            saveBtn.addEventListener('click', () => finishEditing(true));
+            cancelBtn.addEventListener('click', () => finishEditing(false));
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') finishEditing(true);
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') finishEditing(false);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load user's current want to play preference and set dropdown value
+        async function loadUserWantToPlayPreference(gameId, tab = 'my') {
+            if (!currentUser) return;
+
+            try {
+                const wtpQuery = query(
+                    collection(db, 'wantToPlay'),
+                    where('gameId', '==', gameId),
+                    where('userId', '==', currentUser.id)
+                );
+                const wtpDocs = await getDocs(wtpQuery);
+                
+                // Get the correct container based on tab
+                const container = tab === 'my' ? myGamesContainer : allGamesContainer;
+                const selectElement = container.querySelector(`.want-to-play-select[data-id="${gameId}"]`);
+                if (selectElement) {
+                    if (!wtpDocs.empty) {
+                        const preferenceValue = wtpDocs.docs[0].data().preferenceValue || 0;
+                        console.log(`Setting dropdown for game ${gameId} to value ${preferenceValue}`);
+                        selectElement.value = preferenceValue.toString();
+                    } else {
+                        console.log(`No preference found for game ${gameId}, setting to 0`);
+                        selectElement.value = '0';
+                    }
+                } else {
+                    console.warn(`Dropdown element not found for game ${gameId} in ${tab} tab`);
+                }
+            } catch (error) {
+                console.error(`Error loading user preference for game ${gameId}:`, error);
+            }
+        }
+
+        // Want to Play functionality
+        async function setWantToPlayPreference(gameId, preferenceValue) {
+            if (!currentUser) {
+                showError('You must be signed in to mark games');
+                return;
+            }
+
+            try {
+                // Check if user already has a preference for this game
+                const wtpQuery = query(
+                    collection(db, 'wantToPlay'),
+                    where('gameId', '==', gameId),
+                    where('userId', '==', currentUser.id)
+                );
+                const wtpDocs = await getDocs(wtpQuery);
+
+                if (!wtpDocs.empty) {
+                    // Update existing entry
+                    if (preferenceValue === 0) {
+                        // Delete if preference is 0 (not bothered)
+                        await deleteDoc(doc(db, 'wantToPlay', wtpDocs.docs[0].id));
+                    } else {
+                        // Update with new preference value
+                        await updateDoc(doc(db, 'wantToPlay', wtpDocs.docs[0].id), {
+                            preferenceValue: preferenceValue,
+                            updatedAt: new Date()
+                        });
+                    }
+                } else if (preferenceValue > 0) {
+                    // Add new entry only if preference is not 0
+                    await addDoc(collection(db, 'wantToPlay'), {
+                        gameId: gameId,
+                        userId: currentUser.id,
+                        username: currentUser.username,
+                        preferenceValue: preferenceValue,
+                        createdAt: new Date()
+                    });
+                }
+
+                // Reload games lists
+                await loadMyGames(currentUser.id);
+                await loadAllGames();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Know How to Play functionality
+        async function toggleKnowHowToPlay(gameId) {
+            if (!currentUser) {
+                showError('You must be signed in to mark games');
+                return;
+            }
+
+            try {
+                // Check if user already marked this game as know how to play
+                const khttpQuery = query(
+                    collection(db, 'knowHowToPlay'),
+                    where('gameId', '==', gameId),
+                    where('userId', '==', currentUser.id)
+                );
+                const khttpDocs = await getDocs(khttpQuery);
+
+                if (!khttpDocs.empty) {
+                    // Remove the know how to play entry
+                    await deleteDoc(doc(db, 'knowHowToPlay', khttpDocs.docs[0].id));
+                } else {
+                    // Add know how to play entry
+                    await addDoc(collection(db, 'knowHowToPlay'), {
+                        gameId: gameId,
+                        userId: currentUser.id,
+                        username: currentUser.username,
+                        createdAt: new Date()
+                    });
+                }
+
+                // Reload games lists
+                await loadMyGames(currentUser.id);
+                await loadAllGames();
+            } catch (error) {
+                console.error('Error toggling know how to play:', error);
+                if (error.code === 'permission-denied') {
+                    showError('Permission denied. Make sure Firestore security rules include knowHowToPlay collection.');
+                } else {
+                    showError(error.message);
+                }
+            }
+        }
+
+        async function loadWantToPlayUsers(gameId, tab = 'my') {
+            try {
+                const wtpQuery = query(
+                    collection(db, 'wantToPlay'),
+                    where('gameId', '==', gameId)
+                );
+
+                const snapshot = await getDocs(wtpQuery);
+                const users = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Only include users with preference value 3 or higher
+                    if ((data.preferenceValue || 0) >= 3) {
+                        users.push({
+                            username: data.username,
+                            preferenceValue: data.preferenceValue || 0
+                        });
+                    }
+                });
+
+                displayWantToPlayUsers(gameId, users, tab);
+            } catch (error) {
+                console.error(`Error loading want to play users for game ${gameId}:`, error);
+            }
+        }
+
+        async function loadMergedWantToPlayUsers(gameIds, tab = 'all') {
+            try {
+                const userMap = {};
+                
+                for (const gameId of gameIds) {
+                    const wtpQuery = query(
+                        collection(db, 'wantToPlay'),
+                        where('gameId', '==', gameId)
+                    );
+                    
+                    const snapshot = await getDocs(wtpQuery);
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if ((data.preferenceValue || 0) >= 3) {
+                            const username = data.username;
+                            if (!userMap[username]) {
+                                userMap[username] = data.preferenceValue || 0;
+                            }
+                        }
+                    });
+                }
+                
+                const users = Object.entries(userMap).map(([username, preferenceValue]) => ({
+                    username,
+                    preferenceValue
+                }));
+                
+                displayWantToPlayUsers(gameIds[0], users, tab);
+            } catch (error) {
+                console.error(`Error loading merged want to play users:`, error);
+            }
+        }
+
+        function displayWantToPlayUsers(gameId, users, tab = 'my') {
+            const container = document.getElementById(`wtp-list-${tab}-${gameId}`);
+            if (!container) {
+                console.warn(`Container not found for game ${gameId} in ${tab} tab`);
+                return;
+            }
+
+            if (users.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const getColorClass = (preferenceValue) => {
+                if (preferenceValue === 5) return 'user-badge-red';
+                if (preferenceValue === 4) return 'user-badge-orange';
+                if (preferenceValue === 3) return 'user-badge-yellow';
+                return 'user-badge';
+            };
+
+            container.innerHTML = `
+                <div class="want-to-play-list-title">Wants to play:</div>
+                <div class="want-to-play-users">
+                    ${users.map(user => `<div class="user-badge ${getColorClass(user.preferenceValue)}">${escapeHtml(user.username)}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        async function loadKnowHowToPlayUsers(gameId, tab = 'my') {
+            try {
+                const khttpQuery = query(
+                    collection(db, 'knowHowToPlay'),
+                    where('gameId', '==', gameId)
+                );
+
+                const snapshot = await getDocs(khttpQuery);
+                const users = [];
+                snapshot.forEach((doc) => {
+                    users.push(doc.data().username);
+                });
+
+                displayKnowHowToPlayUsers(gameId, users, tab);
+            } catch (error) {
+                console.error(`Error loading know how to play users for game ${gameId}:`, error);
+            }
+        }
+
+        async function loadMergedKnowHowToPlayUsers(gameIds, tab = 'all') {
+            try {
+                const userSet = new Set();
+                
+                for (const gameId of gameIds) {
+                    const khttpQuery = query(
+                        collection(db, 'knowHowToPlay'),
+                        where('gameId', '==', gameId)
+                    );
+                    
+                    const snapshot = await getDocs(khttpQuery);
+                    snapshot.forEach((doc) => {
+                        userSet.add(doc.data().username);
+                    });
+                }
+                
+                const users = Array.from(userSet);
+                displayKnowHowToPlayUsers(gameIds[0], users, tab);
+            } catch (error) {
+                console.error(`Error loading merged know how to play users:`, error);
+            }
+        }
+
+        function displayKnowHowToPlayUsers(gameId, users, tab = 'my') {
+            const container = document.getElementById(`khtp-list-${tab}-${gameId}`);
+            if (!container) {
+                console.warn(`Container not found for game ${gameId} in ${tab} tab`);
+                return;
+            }
+
+            if (users.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="know-how-to-play-list-title">Knows how to play:</div>
+                <div class="know-how-to-play-users">
+                    ${users.map(username => `<div class="user-badge user-badge-green">${escapeHtml(username)}</div>`).join('')}
+                </div>
+            `;
+        }
+
+        // Initialize - check for saved session
+        function checkSession() {
+            const savedUser = loadSession();
+            if (savedUser) {
+                // Auto-login with saved session
+                currentUser = savedUser;
+                authScreen.classList.add('hidden');
+                appScreen.classList.add('active');
+                userEmail.textContent = savedUser.username;
+                loadMyGames(currentUser.id);
+                loadAllGames();
+            } else {
+                // Show login screen
+                authScreen.classList.remove('hidden');
+                appScreen.classList.remove('active');
+            }
+        }
+
+        // Run initialization when page loads
+        checkSession();
+    </script>
+</body>
+</html>
