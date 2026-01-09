@@ -7,4 +7,5 @@ export default defineConfig({
     outDir: './docs',
     emptyOutDir: true, // also necessary
   },
+  base: "https://doydul.github.io/EppingBGGroup/",
 })
