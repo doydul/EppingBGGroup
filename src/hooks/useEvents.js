@@ -81,10 +81,53 @@ export function useEvents(userId, username) {
     loadAllRsvps();
   }, [loadEvents, loadAllRsvps]);
 
-  // Merge database events with virtual Monday event
+  // Build a map of duplicate event IDs for RSVP aggregation
+  const duplicateEventIds = useMemo(() => {
+    const keyToIds = new Map();
+
+    for (const event of dbEvents) {
+      const key = `${event.title.toLowerCase()}|${event.date}`;
+      if (!keyToIds.has(key)) {
+        keyToIds.set(key, []);
+      }
+      keyToIds.get(key).push(event.id);
+    }
+
+    // Map each event ID to all IDs that share the same title+date
+    const idToAllIds = new Map();
+    for (const ids of keyToIds.values()) {
+      for (const id of ids) {
+        idToAllIds.set(id, ids);
+      }
+    }
+
+    return idToAllIds;
+  }, [dbEvents]);
+
+  // Merge database events with virtual Monday event, deduplicating by title+date
   const events = useMemo(() => {
     const nextMonday = getNextMonday();
-    const hasMondayEvent = dbEvents.some(
+
+    // Deduplicate events by title+date, keeping the oldest (first created)
+    const seen = new Map();
+    const deduplicatedEvents = [];
+
+    // Sort by createdAt to keep the oldest
+    const sortedDbEvents = [...dbEvents].sort((a, b) => {
+      const aTime = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+      const bTime = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+      return aTime - bTime;
+    });
+
+    for (const event of sortedDbEvents) {
+      const key = `${event.title.toLowerCase()}|${event.date}`;
+      if (!seen.has(key)) {
+        seen.set(key, event);
+        deduplicatedEvents.push(event);
+      }
+    }
+
+    const hasMondayEvent = deduplicatedEvents.some(
       e => e.title === WEEKLY_MEETUP_TITLE && e.date === nextMonday
     );
 
@@ -95,7 +138,7 @@ export function useEvents(userId, username) {
       isVirtual: true
     }];
 
-    const allEvents = [...dbEvents, ...virtualEvents];
+    const allEvents = [...deduplicatedEvents, ...virtualEvents];
     allEvents.sort((a, b) => a.date.localeCompare(b.date));
 
     return allEvents;
@@ -123,15 +166,29 @@ export function useEvents(userId, username) {
 
     let actualEventId = eventId;
 
-    // If this is a virtual event, create it first
+    // If this is a virtual event, check if one already exists before creating
     if (eventId.startsWith('virtual-') && eventData) {
-      const docRef = await addDoc(collection(db, 'events'), {
-        title: eventData.title,
-        date: eventData.date,
-        createdBy: 'system',
-        createdAt: new Date()
-      });
-      actualEventId = docRef.id;
+      // Check if an event with same title and date already exists
+      const existingQuery = query(
+        collection(db, 'events'),
+        where('title', '==', eventData.title),
+        where('date', '==', eventData.date)
+      );
+      const existingSnapshot = await getDocs(existingQuery);
+
+      if (existingSnapshot.docs.length > 0) {
+        // Use existing event
+        actualEventId = existingSnapshot.docs[0].id;
+      } else {
+        // Create new event
+        const docRef = await addDoc(collection(db, 'events'), {
+          title: eventData.title,
+          date: eventData.date,
+          createdBy: 'system',
+          createdAt: new Date()
+        });
+        actualEventId = docRef.id;
+      }
       await loadEvents();
     }
 
@@ -152,11 +209,33 @@ export function useEvents(userId, username) {
   };
 
   const getRsvpUsers = (eventId) => {
-    return rsvpCache[eventId] || [];
+    // Aggregate RSVPs from all duplicate event IDs
+    const allIds = duplicateEventIds.get(eventId) || [eventId];
+    const allRsvps = [];
+    const seenUserIds = new Set();
+
+    for (const id of allIds) {
+      const rsvps = rsvpCache[id] || [];
+      for (const rsvp of rsvps) {
+        if (!seenUserIds.has(rsvp.userId)) {
+          seenUserIds.add(rsvp.userId);
+          allRsvps.push(rsvp);
+        }
+      }
+    }
+
+    return allRsvps;
   };
 
   const hasUserRsvped = (eventId) => {
-    return rsvpCache[eventId]?.some(r => r.userId === userId) || false;
+    // Check RSVPs across all duplicate event IDs
+    const allIds = duplicateEventIds.get(eventId) || [eventId];
+    for (const id of allIds) {
+      if (rsvpCache[id]?.some(r => r.userId === userId)) {
+        return true;
+      }
+    }
+    return false;
   };
 
   const updateEventDescription = async (eventId, description) => {
